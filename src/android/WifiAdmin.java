@@ -160,7 +160,7 @@ public class WifiAdmin extends CordovaPlugin {
         localWifiConfiguration1.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
         localWifiConfiguration1.allowedKeyManagement.set(0);
         localWifiConfiguration1.wepTxKeyIndex = 0;
-        if (password==null || password=="") {  //没有密码
+        if (password==null || password.equals("")) {  //没有密码
             localWifiConfiguration1.wepKeys[0] = "";
             localWifiConfiguration1.allowedKeyManagement.set(0);
             localWifiConfiguration1.wepTxKeyIndex = 0;
@@ -182,20 +182,10 @@ public class WifiAdmin extends CordovaPlugin {
      */
     public void createWifiAP(boolean paramBoolean,String ssid,String password) {
         try {
-        	WifiConfiguration paramWifiConfiguration = createWifiAPInfo(paramBoolean,ssid,password);
-        	
-    		Context context = cordova.getActivity().getApplicationContext();
-    		WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-            Class localClass = wifiManager.getClass();
-            Class[] arrayOfClass = new Class[2];
-            arrayOfClass[0] = WifiConfiguration.class;
-            arrayOfClass[1] = Boolean.TYPE;
-            Method localMethod = localClass.getMethod("setWifiApEnabled",arrayOfClass);
-            WifiManager localWifiManager = wifiManager;
-            Object[] arrayOfObject = new Object[2];
-            arrayOfObject[0] = paramWifiConfiguration;
-            arrayOfObject[1] = Boolean.valueOf(paramBoolean);
-            localMethod.invoke(localWifiManager, arrayOfObject);
+            WifiConfiguration paramWifiConfiguration = createWifiAPInfo(paramBoolean,ssid,password);
+            Context context = cordova.getActivity().getApplicationContext();
+	    WifiApManager wifiAp = new WifiApManager(context);
+            wifiAp.setWifiApEnabled(paramWifiConfiguration,paramBoolean);
             return;
         } catch (Exception e) {
             e.printStackTrace();

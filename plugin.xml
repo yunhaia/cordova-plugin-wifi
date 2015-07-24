@@ -34,7 +34,10 @@
         </config-file>
           
         <source-file src="src/android/WifiAdmin.java" target-dir="src/com/rjfun/cordova/plugin" />
-        <source-file src="src/android/WifiAdmRef.java" target-dir="src/com/rjfun/cordova/plugin" />
+        <source-file src="src/android/ClientScanResult.java" target-dir="src/com/rjfun/cordova/plugin" />
+        <source-file src="src/android/FinishScanListener.java" target-dir="src/com/rjfun/cordova/plugin" />
+        <source-file src="src/android/WIFI_AP_STATE.java" target-dir="src/com/rjfun/cordova/plugin" />
+        <source-file src="src/android/WifiApManager.java" target-dir="src/com/rjfun/cordova/plugin" />
      </platform>
      
      <!-- ios -->
