@@ -1,5 +1,7 @@
 package com.rjfun.cordova.plugin;
 
+import java.lang.reflect.Method;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
@@ -10,6 +12,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
@@ -132,19 +135,89 @@ public class WifiAdmin extends CordovaPlugin {
 
 		return null;
     }
+    /**
+     * 创建一个wifi信息
+     * @param ssid 名称
+     * @param passawrd 密码
+     * @param paramInt 有3个参数，1是无密码，2是简单密码，3是wap加密
+     * @return
+     */
+    public WifiConfiguration createWifiAPInfo(boolean enabled,String ssid, String password) {
+        //配置网络信息类
+        WifiConfiguration localWifiConfiguration1 = new WifiConfiguration();
+        //设置配置网络属性
+        localWifiConfiguration1.allowedAuthAlgorithms.clear();
+        localWifiConfiguration1.allowedGroupCiphers.clear();
+        localWifiConfiguration1.allowedKeyManagement.clear();
+        localWifiConfiguration1.allowedPairwiseCiphers.clear();
+        localWifiConfiguration1.allowedProtocols.clear();
 
+        localWifiConfiguration1.SSID = ssid;
+        localWifiConfiguration1.allowedAuthAlgorithms.set(1);
+        localWifiConfiguration1.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+        localWifiConfiguration1.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+        localWifiConfiguration1.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+        localWifiConfiguration1.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+        localWifiConfiguration1.allowedKeyManagement.set(0);
+        localWifiConfiguration1.wepTxKeyIndex = 0;
+        if (password==null || password=="") {  //没有密码
+            localWifiConfiguration1.wepKeys[0] = "";
+            localWifiConfiguration1.allowedKeyManagement.set(0);
+            localWifiConfiguration1.wepTxKeyIndex = 0;
+        } else{//wap加密
+            localWifiConfiguration1.preSharedKey = password;
+            localWifiConfiguration1.allowedAuthAlgorithms.set(0);
+            localWifiConfiguration1.allowedProtocols.set(1);
+            localWifiConfiguration1.allowedProtocols.set(0);
+            localWifiConfiguration1.allowedKeyManagement.set(1);
+            localWifiConfiguration1.allowedPairwiseCiphers.set(2);
+            localWifiConfiguration1.allowedPairwiseCiphers.set(1);
+        }
+        return localWifiConfiguration1;
+    }
+    /**
+     * 根据wifi信息创建或关闭一个热点
+     * @param paramWifiConfiguration
+     * @param paramBoolean 关闭标志
+     */
+    public void createWifiAP(boolean paramBoolean,String ssid,String password) {
+        try {
+        	WifiConfiguration paramWifiConfiguration = createWifiAPInfo(paramBoolean,ssid,password);
+        	
+    		Context context = cordova.getActivity().getApplicationContext();
+    		WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+            Class localClass = wifiManager.getClass();
+            Class[] arrayOfClass = new Class[2];
+            arrayOfClass[0] = WifiConfiguration.class;
+            arrayOfClass[1] = Boolean.TYPE;
+            Method localMethod = localClass.getMethod("setWifiApEnabled",arrayOfClass);
+            WifiManager localWifiManager = wifiManager;
+            Object[] arrayOfObject = new Object[2];
+            arrayOfObject[0] = paramWifiConfiguration;
+            arrayOfObject[1] = Boolean.valueOf(paramBoolean);
+            localMethod.invoke(localWifiManager, arrayOfObject);
+            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     private PluginResult executeEnableWifiAP(JSONArray inputs, CallbackContext callbackContext) {
     	Log.w(LOGTAG, "executeEnableWifiAP");
 
 		boolean toEnable = true;
 		try {
 			toEnable = inputs.getBoolean( 0 );
+			JSONObject jsobj = inputs.getJSONObject(1);
+			String ssid = jsobj.getString("ssid");
+			String password = jsobj.getString("password");
+	    	Log.w(LOGTAG, "ssid: "+ssid+" password: "+password);
+	    	createWifiAP(toEnable,ssid,password);
 		} catch (JSONException e) {
 		      Log.w(LOGTAG, String.format("Got JSON Exception: %s", e.getMessage()));
 		      return new PluginResult(Status.JSON_EXCEPTION);
 		}
 
-		return null;
+		return new PluginResult(Status.OK);
     }
 
     private PluginResult executeEnableWifiLock(JSONArray inputs, CallbackContext callbackContext) {
